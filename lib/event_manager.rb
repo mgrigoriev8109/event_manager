@@ -22,9 +22,15 @@ def clean_phone_number(phone_number)
   end
 end
 
-def peak_registration_hours(hour)
-  puts Time.strptime(hour, '%m/%d/%Y %H:%M')
-  
+def registration_hours(hour)
+  Time.strptime(hour, '%m/%d/%Y %H:%M').strftime("%H")
+end
+
+def count_hour_occurances(hour_array)
+  hour_array.reduce(Hash.new(0)) do |hash, count|
+    hash[count] += 1
+    hash
+  end
 end
 
 def legislators_by_zipcode(zip)
@@ -62,6 +68,7 @@ contents = CSV.open(
 
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
+hours_registered = []
 
 contents.each do |row|
   id = row[0]
@@ -69,9 +76,11 @@ contents.each do |row|
   zipcode = clean_zipcode(row[:zipcode])
   legislators = legislators_by_zipcode(zipcode)
   #phone_number = clean_phone_number(row[:homephone])
-  hour_registered = peak_registration_hours(row[:regdate])
- 
+  hours_registered.push(registration_hours(row[:regdate]))
+  
   #form_letter = erb_template.result(binding)
 
   #save_thank_you_letter(id,form_letter)
 end
+
+p count_hour_occurances(hours_registered).sort_by{|hour, count| -count}
