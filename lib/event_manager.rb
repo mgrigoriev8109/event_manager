@@ -2,6 +2,7 @@ require 'csv'
 require 'google/apis/civicinfo_v2'
 require 'erb'
 require 'time'
+require 'date'
 
 def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5,"0")[0..4]
@@ -26,8 +27,12 @@ def registration_hours(hour)
   Time.strptime(hour, '%m/%d/%Y %H:%M').strftime("%H")
 end
 
-def count_hour_occurances(hour_array)
-  hour_array.reduce(Hash.new(0)) do |hash, count|
+def registration_days(hour)
+  Date.strptime(hour, '%m/%d/%Y').cwday
+end
+
+def count_occurances(array)
+  array.reduce(Hash.new(0)) do |hash, count|
     hash[count] += 1
     hash
   end
@@ -69,6 +74,7 @@ contents = CSV.open(
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
 hours_registered = []
+days_registered = []
 
 contents.each do |row|
   id = row[0]
@@ -77,10 +83,14 @@ contents.each do |row|
   legislators = legislators_by_zipcode(zipcode)
   #phone_number = clean_phone_number(row[:homephone])
   hours_registered.push(registration_hours(row[:regdate]))
-  
+  days_registered.push(registration_days(row[:regdate]))
   #form_letter = erb_template.result(binding)
-
+  registration_days(row[:regdate])
   #save_thank_you_letter(id,form_letter)
 end
 
-p count_hour_occurances(hours_registered).sort_by{|hour, count| -count}
+p "An array showing which hours (military time) the most people registered on:"
+p count_occurances(hours_registered).sort_by{|hour, count| -count}
+
+p "An array showing which days (1 being monday, 7 sunday) the most people registered on:"
+p count_occurances(days_registered).sort_by{|day, count| -count}
