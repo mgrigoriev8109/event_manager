@@ -6,13 +6,20 @@ def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5,"0")[0..4]
 end
 
-def clean_phone_numbers(phone_number)
-  #If the phone number is less than 10 digits, assume that it is a bad number
-  
-  #If the phone number is 10 digits, assume that it is good
-  #If the phone number is 11 digits and the first number is 1, trim the 1 and use the remaining 10 digits
-  #If the phone number is 11 digits and the first number is not 1, then it is a bad number
-  #If the phone number is more than 11 digits, assume that it is a bad number
+def clean_phone_number(phone_number)
+  phone_number = phone_number.delete("^0-9")
+  if phone_number.nil?
+    phone_number = 'This phone number was not supplied'
+  elsif phone_number.length < 10 || phone_number.length > 11
+    puts "This phone number is invalid because it is less than 10 or greater than 11 numbers"
+  elsif phone_number.length == 11 && phone_number[0] == 1
+    puts phone_number.slice[1..-1]
+  elsif phone_number.length == 11
+    puts "This phone number is invalid because it is 11 numbers and does not start with 1"
+  else 
+    puts phone_number
+  end
+
 end
 
 def legislators_by_zipcode(zip)
@@ -56,9 +63,9 @@ contents.each do |row|
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
   legislators = legislators_by_zipcode(zipcode)
-  phone_number = row[:Homephone]
 
-  form_letter = erb_template.result(binding)
+  phone_number = clean_phone_number(row[:homephone])
+  #form_letter = erb_template.result(binding)
 
-  save_thank_you_letter(id,form_letter)
+  #save_thank_you_letter(id,form_letter)
 end
